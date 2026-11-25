@@ -1108,28 +1108,25 @@ else:
             top2 = ppi_df.iloc[1] if len(ppi_df) > 1 else top1
             low_last = ppi_df.iloc[-1]
 
-            a1, a2, a3 = st.columns(3)
-            with a1:
-                st.markdown(f"""
-                <div class="action-card" style="border-top: 4px solid #ff4b4b;">
-                    <h4 style="color:#ff6b6b;">P0 第一優先：馬上緊急修復</h4>
-                    <p><strong>鎖定問題：{top1['痛點屬性']}</strong>（急迫度 {top1['痛點衝擊指數 (PPI)']} 分）</p>
-                    <p>遇到這個問題的玩家，中位數只玩了 <strong>{top1['負評中位數時數 (hr)']} 小時</strong>就寫負評，最容易引發剛買就退款的雪崩效應，建議研發團隊立刻優先搶修。</p>
-                </div>""", unsafe_allow_html=True)
-            with a2:
-                st.markdown(f"""
-                <div class="action-card" style="border-top: 4px solid #ffa15a;">
-                    <h4 style="color:#ffa15a;">P1 第二優先：近期版本改善</h4>
-                    <p><strong>鎖定問題：{top2['痛點屬性']}</strong>（急迫度 {top2['痛點衝擊指數 (PPI)']} 分）</p>
-                    <p>這個問題會讓 <strong>{top2['平滑流失轉化率 (%)']}%</strong> 的負評玩家選擇退坑，主要傷害玩了約 <strong>{top2['負評中位數時數 (hr)']} 小時</strong>的中期玩家，建議在下個大改版前提出對策。</p>
-                </div>""", unsafe_allow_html=True)
-            with a3:
-                st.markdown(f"""
-                <div class="action-card" style="border-top: 4px solid #4ecdc4;">
-                    <h4 style="color:#4ecdc4;">P2 第三優先：常態慢慢微調</h4>
-                    <p><strong>鎖定問題：{low_last['痛點屬性']}</strong>（急迫度 {low_last['痛點衝擊指數 (PPI)']} 分）</p>
-                    <p>抱怨這塊的玩家通常已玩超過 <strong>{low_last['負評中位數時數 (hr)']} 小時</strong>，屬於邊罵邊玩的核心鐵粉，排進平常例行更新調整即可，不用跟緊急 Bug 搶人力。</p>
-                </div>""", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch;">
+              <div class="action-card" style="border-top: 4px solid #ff4b4b; box-sizing: border-box;">
+                <h4 style="color:#ff6b6b;">P0 第一優先：馬上緊急修復</h4>
+                <p><strong>鎖定問題：{top1['痛點屬性']}</strong>（急迫度 {top1['痛點衝擊指數 (PPI)']} 分）</p>
+                <p>遇到這個問題的玩家，中位數只玩了 <strong>{top1['負評中位數時數 (hr)']} 小時</strong>就寫負評，最容易引發剛買就退款的雪崩效應，建議研發團隊立刻優先搶修。</p>
+              </div>
+              <div class="action-card" style="border-top: 4px solid #ffa15a; box-sizing: border-box;">
+                <h4 style="color:#ffa15a;">P1 第二優先：近期版本改善</h4>
+                <p><strong>鎖定問題：{top2['痛點屬性']}</strong>（急迫度 {top2['痛點衝擊指數 (PPI)']} 分）</p>
+                <p>這個問題會讓 <strong>{top2['平滑流失轉化率 (%)']}%</strong> 的負評玩家選擇退坑，主要傷害玩了約 <strong>{top2['負評中位數時數 (hr)']} 小時</strong>的中期玩家，建議在下個大改版前提出對策。</p>
+              </div>
+              <div class="action-card" style="border-top: 4px solid #4ecdc4; box-sizing: border-box;">
+                <h4 style="color:#4ecdc4;">P2 第三優先：常態慢慢微調</h4>
+                <p><strong>鎖定問題：{low_last['痛點屬性']}</strong>（急迫度 {low_last['痛點衝擊指數 (PPI)']} 分）</p>
+                <p>抱怨這塊的玩家通常已玩超過 <strong>{low_last['負評中位數時數 (hr)']} 小時</strong>，屬於邊罵邊玩的核心鐵粉，排進平常例行更新調整即可，不用跟緊急 Bug 搶人力。</p>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
 
             st.divider()
             st.markdown("### 退坑玩家真實原話（紅底為系統自動抓出的痛點詞）")
