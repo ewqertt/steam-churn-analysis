@@ -14,7 +14,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import roc_curve, roc_auc_score, f1_score, accuracy_score, confusion_matrix
+from sklearn.metrics import roc_curve, roc_auc_score, f1_score, accuracy_score
 
 # ==========================================
 # 1. 頁面設定與 Steam 深色電競風 CSS
@@ -226,6 +226,36 @@ def highlight_keywords(text, aspect_name):
         pattern = re.compile(re.escape(kw), re.IGNORECASE)
         escaped = pattern.sub(lambda m: f'<span class="kw-highlight">{m.group(0)}</span>', escaped)
     return escaped
+
+@st.cache_data(ttl=3600)
+def get_game_header_url(appid):
+    if not str(appid).isdigit():
+        return None
+    headers = {"User-Agent": "Mozilla/5.0"}
+    # 1. 優先向 Steam 官方 API 取得最新真實封面網址（支援新版雜湊路徑）
+    try:
+        res = requests.get(
+            f"https://store.steampowered.com/api/appdetails?appids={appid}&filters=basic",
+            headers=headers, timeout=5
+        )
+        if res.status_code == 200:
+            clean_txt = res.text.lstrip('\ufeff').strip()
+            data = json.loads(clean_txt).get(str(appid), {})
+            if data.get("success") and data.get("data", {}).get("header_image"):
+                return data["data"]["header_image"]
+    except Exception:
+        pass
+    # 2. 備援：依序測試新舊 CDN 網址是否有效
+    for url in [
+        f"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{appid}/header.jpg",
+        f"https://cdn.akamai.steamstatic.com/steam/apps/{appid}/header.jpg"
+    ]:
+        try:
+            if requests.head(url, headers=headers, timeout=3).status_code == 200:
+                return url
+        except Exception:
+            pass
+    return None
 
 @st.cache_data(ttl=600)
 def smart_steam_search(term):
@@ -533,6 +563,16 @@ def analyze_single_review_sandbox(text, overall_is_neg):
 
 def generate_markdown_brief(game_name, total_n, neg_ratio, churn_in_neg, refund_cnt, churn_mins, ppi_df):
     top1 = ppi_df.iloc[0]
+    cols = ["痛點屬性", "提及次數", "負面提及數", "平滑負評率 (%)", "平滑流失轉化率 (%)", "流失勝算比 (OR)", "卡方檢定 p-value", "痛點衝擊指數 (PPI)"]
+    sub_tbl = ppi_df[cols]
+    try:
+        md_table = sub_tbl.to_markdown(index=False)
+    except Exception:
+        header = "| " + " | ".join(cols) + " |"
+        sep = "| " + " | ".join(["---"] * len(cols)) + " |"
+        body = ["| " + " | ".join(str(v) for v in row) + " |" for row in sub_tbl.values]
+        md_table = "\n".join([header, sep] + body)
+
     lines = [
         f"# Steam 遊戲痛點與玩家流失率診斷報告：{game_name}",
         "",
@@ -543,7 +583,7 @@ def generate_markdown_brief(game_name, total_n, neg_ratio, churn_in_neg, refund_
         f"- **高風險退款流失玩家 (≤ 2 小時)**：{refund_cnt} 人",
         "",
         "## 2. 痛點修復優先級與統計顯著性檢定表",
-        ppi_df[["痛點屬性", "提及次數", "負面提及數", "平滑負評率 (%)", "平滑流失轉化率 (%)", "流失勝算比 (OR)", "卡方檢定 p-value", "痛點衝擊指數 (PPI)"]].to_markdown(index=False),
+        md_table,
         "",
         "## 3. 優先工程修復建議",
         f"- **🚨 P0 緊急熱修**：優先處理【{top1['痛點屬性']}】（PPI = {top1['痛點衝擊指數 (PPI)']}，勝算比 {top1['流失勝算比 (OR)']}，中位數時數 {top1['負評中位數時數 (hr)']} hr）。"
@@ -638,13 +678,14 @@ if st.session_state["data_ready"] and st.session_state["df_reviews"] is not None
     selected_appid = st.session_state["selected_appid"]
     source_type = st.session_state["source_type"]
 
-    # 頂部官方封面圖 + 資訊橫幅
+    # 頂部官方封面圖 + 資訊橫幅（支援新舊版 Steam CDN 路徑）
     col_img, col_info = st.columns([1.15, 2.85])
     with col_img:
-        if str(selected_appid).isdigit():
-            st.image(f"https://cdn.akamai.steamstatic.com/steam/apps/{selected_appid}/header.jpg", use_container_width=True)
+        header_url = get_game_header_url(selected_appid)
+        if header_url:
+            st.image(header_url, use_container_width=True)
         else:
-            st.info("📁 本地離線自訂資料集")
+            st.info(f"🎮 {selected_name}")
     with col_info:
         st.subheader(f"🎯 診斷對象：{selected_name}")
         if source_type == "live":
@@ -720,7 +761,6 @@ if st.session_state["data_ready"] and st.session_state["df_reviews"] is not None
                 st.plotly_chart(fig_ppi, use_container_width=True)
 
             with c_right:
-                # 勝算比 95% 信賴區間森林圖 (Forest Plot)
                 f_df = ppi_df.sort_values("_or_num", ascending=True).copy()
                 fig_forest = go.Figure()
                 fig_forest.add_trace(go.Scatter(
@@ -744,7 +784,6 @@ if st.session_state["data_ready"] and st.session_state["df_reviews"] is not None
                 )
                 st.plotly_chart(fig_forest, use_container_width=True)
 
-            # 高頻觸發詞 + 貝葉斯平滑前後對照
             c_b1, c_b2 = st.columns([1.0, 1.2])
             with c_b1:
                 if kw_hits:
@@ -784,7 +823,6 @@ if st.session_state["data_ready"] and st.session_state["df_reviews"] is not None
 
                 lr_prob = lr_pipe.predict_proba(X_te)[:, 1]
                 rf_prob = rf_clf.predict_proba(X_te)[:, 1]
-                lr_pred = lr_pipe.predict(X_te)
                 rf_pred = rf_clf.predict(X_te)
 
                 lr_auc = roc_auc_score(y_te, lr_prob)
@@ -1041,11 +1079,17 @@ if st.session_state["data_ready"] and st.session_state["df_reviews"] is not None
 
                 p_img1, p_img2 = st.columns(2)
                 with p_img1:
-                    if str(selected_appid).isdigit():
-                        st.image(f"https://cdn.akamai.steamstatic.com/steam/apps/{selected_appid}/header.jpg", caption=f"主分析遊戲：{selected_name}", use_container_width=True)
+                    h1 = get_game_header_url(selected_appid)
+                    if h1:
+                        st.image(h1, caption=f"主分析遊戲：{selected_name}", use_container_width=True)
+                    else:
+                        st.info(f"🎮 主分析遊戲：{selected_name}")
                 with p_img2:
-                    if str(pk_appid).isdigit():
-                        st.image(f"https://cdn.akamai.steamstatic.com/steam/apps/{pk_appid}/header.jpg", caption=f"競品對照組：{pk_name}", use_container_width=True)
+                    h2 = get_game_header_url(pk_appid)
+                    if h2:
+                        st.image(h2, caption=f"競品對照組：{pk_name}", use_container_width=True)
+                    else:
+                        st.info(f"🎮 競品對照組：{pk_name}")
 
                 all_asps = list(ASPECT_KEYWORDS.keys())
                 s1_map = dict(zip(ppi_df["痛點屬性"], ppi_df["痛點衝擊指數 (PPI)"]))
@@ -1058,8 +1102,8 @@ if st.session_state["data_ready"] and st.session_state["df_reviews"] is not None
                 fig_radar.add_trace(go.Scatterpolar(r=v2 + [v2[0]], theta=all_asps + [all_asps[0]], fill="toself", name=pk_name, line_color="#ff4b4b"))
                 fig_radar.update_layout(
                     polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
-                    template="plotly_dark", title=f"⚔️ 五大痛點維度衝擊指數 (PPI) 雷達對決",
-                    paper_bgcolor="rgba(0,0,0,0)", height=450
+                    template="plotly_dark", title="⚔️ 五大痛點維度衝擊指數 (PPI) 雷達對決",
+                    paper_bgcolor="rgba(0,0,0,0)", height=520
                 )
                 st.plotly_chart(fig_radar, use_container_width=True)
 else:
