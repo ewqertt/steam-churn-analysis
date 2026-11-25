@@ -323,9 +323,26 @@ def fetch_steam_data(appid, target_count, churn_threshold_mins, progress_bar=Non
         demo_rows = []
         for i in range(target_count):
             txt, is_up, b_hrs, b_post, b_votes = rng.choice(pool)
-            j_hrs = max(0.3, round(b_hrs * rng.uniform(0.7, 1.3), 1))
-            j_post = max(0.0, round(b_post * rng.uniform(0.5, 1.5), 1))
-            j_votes = max(0, int(b_votes * rng.uniform(0.5, 1.5)))
+
+            # 1. 對數常態雜訊：模擬真實玩家遊玩時數與按讚數的右偏長尾分布
+            j_hrs = max(0.3, round(b_hrs * rng.lognormvariate(0, 0.55), 1))
+            j_votes = max(0, int(b_votes * rng.lognormvariate(0, 0.7) + rng.randint(0, 5)))
+
+            # 2. 行為隨機雜訊：模擬真實世界中約 18%~22% 的非典型留存/退坑行為，避免模型過擬合出現 AUC = 1.000
+            if not is_up:
+                if b_post <= churn_threshold_mins:
+                    if rng.random() < 0.18:
+                        j_post = round(rng.uniform(churn_threshold_mins + 30, 540.0), 1)
+                    else:
+                        j_post = max(0.0, round(b_post * rng.uniform(0.3, 1.8) + rng.uniform(0, 15), 1))
+                else:
+                    if rng.random() < 0.22:
+                        j_post = 0.0 if churn_threshold_mins <= 0 else round(rng.uniform(0.0, churn_threshold_mins * 0.8), 1)
+                    else:
+                        j_post = max(0.0, round(b_post * rng.uniform(0.5, 1.6), 1))
+            else:
+                j_post = max(0.0, round(b_post * rng.uniform(0.5, 1.5), 1))
+
             d = rng.choice(dates)
             demo_rows.append({
                 "review_id": f"snap_{appid}_{i}",
