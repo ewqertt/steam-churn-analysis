@@ -845,7 +845,7 @@ with st.sidebar:
     sb_run = st.button("套用並開始體檢", type="primary", use_container_width=True, key="sb_run")
 
     st.divider()
-    with st.expander("進階資料科學參數（評審/研究用）", expanded=False):
+    with st.expander("進階參數", expanded=False):
         target_count = st.slider("分析評論數量 (N)", 100, 1200, 400, 100)
         churn_mins = st.slider("判定「真的退坑」門檻 ΔT (分鐘)", 0, 180, 60, 15,
                                help="留負評後，如果後續新增遊玩時間不超過這個分鐘數，就判定為實質退坑")
