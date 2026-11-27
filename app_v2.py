@@ -40,18 +40,6 @@ st.markdown("""
         margin-bottom: 18px;
         box-shadow: 0 8px 24px rgba(0,0,0,0.45);
     }
-    .hero-badge {
-        display: inline-block;
-        background: rgba(102, 192, 244, 0.16);
-        color: #66c0f4;
-        border: 1px solid rgba(102, 192, 244, 0.45);
-        border-radius: 20px;
-        padding: 3px 11px;
-        font-size: 12px;
-        font-weight: 700;
-        margin-bottom: 8px;
-        margin-right: 6px;
-    }
     .hero-title {
         font-size: 28px;
         font-weight: 800;
@@ -84,6 +72,18 @@ st.markdown("""
         border-radius: 12px;
         padding: 14px 18px;
         margin-bottom: 14px;
+    }
+    .genre-pill {
+        display: inline-block;
+        background: rgba(78, 205, 196, 0.14);
+        color: #4ecdc4;
+        border: 1px solid rgba(78, 205, 196, 0.4);
+        border-radius: 16px;
+        padding: 2px 10px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-right: 6px;
+        margin-bottom: 6px;
     }
     .verdict-box {
         background: linear-gradient(90deg, rgba(255,75,75,0.16) 0%, rgba(23,26,33,0.95) 75%);
@@ -142,32 +142,35 @@ st.markdown("""
         color: #dce9f5;
         line-height: 1.6;
     }
+    .dot-blue {
+        display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+        background-color: #66c0f4; margin-right: 7px;
+    }
+    .dot-red {
+        display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+        background-color: #ff4b4b; margin-right: 7px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("""
 <div class="hero-banner">
-    <div>
-        <span class="hero-badge">東吳大學 資料科學系專題展示</span>
-        <span class="hero-badge">自動分析 Steam 玩家評論 × 遊玩時數</span>
-        <span class="hero-badge">幫遊戲公司排出「最該先修哪裡」</span>
-    </div>
-    <div class="hero-title">🎮 Steam 遊戲體檢儀：找出「真正害玩家退坑」的致命傷</div>
+    <div class="hero-title">Steam 遊戲體檢儀：找出「真正害玩家退坑」的致命傷</div>
     <div class="hero-sub">
         玩家給負評時，有些只是嘴上抱怨、隔天照樣玩；有些卻是<strong>罵完再也不開遊戲，甚至直接退款</strong>。<br>
-        這套系統會自動讀取玩家評論與後續遊玩紀錄，幫開發團隊從海量留言中揪出<strong>最致命的退坑原因</strong>，並支援雙遊戲直接比較。
+        這套系統會自動讀取玩家評論與後續遊玩紀錄，幫開發團隊從海量留言中揪出<strong>最致命的退坑原因</strong>，並自動推薦<strong>同類型競品</strong>進行橫向比較。
     </div>
     <div class="step-grid">
         <div class="step-box">
-            <div class="step-num">STEP 1｜抓評論＋看他後來有沒有繼續玩</div>
+            <div class="step-num">STEP 1｜抓評論＋看後續遊玩時數</div>
             <div class="step-text">比對「寫負評時」與「總遊玩時數」，分辨玩家是嘴上抱怨，還是真的退坑了。</div>
         </div>
         <div class="step-box">
-            <div class="step-num">STEP 2｜一句一句拆解，不誤傷優點</div>
+            <div class="step-num">STEP 2｜分句拆解，不誤傷優點</div>
             <div class="step-text">把「畫面很美，但一直閃退」拆成子句分析，精準歸類五大痛點，不誤判好評。</div>
         </div>
         <div class="step-box">
-            <div class="step-num">STEP 3｜算出 0～100 修復急迫度排行榜</div>
+            <div class="step-num">STEP 3｜算出 0～100 修復急迫度排行</div>
             <div class="step-text">結合統計檢定與機器學習，直接給出「馬上修 / 近期修 / 慢慢調」決策建議。</div>
         </div>
     </div>
@@ -175,22 +178,22 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. 領域關鍵字詞典與基準樣本池
+# 2. 領域關鍵字詞典、同類型競品庫與基準樣本池
 # ==========================================
 ASPECT_KEYWORDS = {
-    "💥 效能與 Bug": ["閃退", "崩潰", "優化", "幀數", "fps", "黑屏", "卡死", "bug", "報錯", "顯卡", "掉幀", "當機", "著色器", "卡頓", "記憶體"],
-    "🔌 網路連線": ["連線", "伺服器", "斷線", "延遲", "ping", "封包", "掉線", "土豆", "連不上", "匹配不到", "網路", "回溯"],
-    "🕹️ 遊戲機制": ["玩法", "機制", "外掛", "作弊", "舉報", "手感", "地圖", "空氣牆", "匹配", "隊友", "通行證", "無聊", "引導", "視角", "尋路"],
-    "⚖️ 數值平衡": ["平衡", "削弱", "增強", "超模", "傷害", "武器", "英雄", "角色", "數值", "強度", "破格", "難度", "判定"],
-    "🎨 畫面美術": ["畫質", "畫面", "美術", "建模", "光影", "貼圖", "特效", "解像度", "解析度", "風格", "風景", "音樂"]
+    "效能與 Bug": ["閃退", "崩潰", "優化", "幀數", "fps", "黑屏", "卡死", "bug", "報錯", "顯卡", "掉幀", "當機", "著色器", "卡頓", "記憶體"],
+    "網路連線": ["連線", "伺服器", "斷線", "延遲", "ping", "封包", "掉線", "土豆", "連不上", "匹配不到", "網路", "回溯"],
+    "遊戲機制": ["玩法", "機制", "外掛", "作弊", "舉報", "手感", "地圖", "空氣牆", "匹配", "隊友", "通行證", "無聊", "引導", "視角", "尋路"],
+    "數值平衡": ["平衡", "削弱", "增強", "超模", "傷害", "武器", "英雄", "角色", "數值", "強度", "破格", "難度", "判定"],
+    "畫面美術": ["畫質", "畫面", "美術", "建模", "光影", "貼圖", "特效", "解像度", "解析度", "風格", "風景", "音樂"]
 }
 
 ASPECT_PLAIN_DESC = {
-    "💥 效能與 Bug": "閃退、黑屏、掉幀卡頓或遊戲當機",
-    "🔌 網路連線": "伺服器斷線、高延遲跳 Ping 或連不上線",
-    "🕹️ 遊戲機制": "外掛作弊、空氣牆、匹配失衡或玩法卡關",
-    "⚖️ 數值平衡": "角色武器太強/太弱、後期難度失衡",
-    "🎨 畫面美術": "畫質模糊、貼圖延遲載入或視覺表現"
+    "效能與 Bug": "閃退、黑屏、掉幀卡頓或遊戲當機",
+    "網路連線": "伺服器斷線、高延遲跳 Ping 或連不上線",
+    "遊戲機制": "外掛作弊、空氣牆、匹配失衡或玩法卡關",
+    "數值平衡": "角色武器太強/太弱、後期難度失衡",
+    "畫面美術": "畫質模糊、貼圖延遲載入或視覺表現"
 }
 
 POS_WORDS = ["神作", "優秀", "精緻", "流暢", "好玩", "推薦", "喜歡", "超美", "滿意", "不錯", "穩定", "良心", "歡樂", "震撼", "頂尖", "很棒", "很頂"]
@@ -205,12 +208,74 @@ CHINESE_GAME_MAP = {
     "吃雞": {"appid": "578080", "name": "PUBG: BATTLEGROUNDS (絕地求生)"},
     "艾爾登法環": {"appid": "1245620", "name": "ELDEN RING (艾爾登法環)"},
     "法環": {"appid": "1245620", "name": "ELDEN RING (艾爾登法環)"},
+    "隻狼": {"appid": "814380", "name": "Sekiro: Shadows Die Twice (隻狼：暗影雙死)"},
     "賽博朋克": {"appid": "1091500", "name": "Cyberpunk 2077 (電馭叛客 2077)"},
     "電馭叛客": {"appid": "1091500", "name": "Cyberpunk 2077 (電馭叛客 2077)"},
+    "巫師": {"appid": "292030", "name": "The Witcher 3: Wild Hunt (巫師 3)"},
     "魔物獵人": {"appid": "2246340", "name": "Monster Hunter Wilds (魔物獵人 荒野)"},
+    "柏德之門": {"appid": "1086940", "name": "Baldur's Gate 3 (柏德之門 3)"},
     "cs2": {"appid": "730", "name": "Counter-Strike 2 (CS2)"},
-    "apex": {"appid": "1172470", "name": "Apex Legends"}
+    "apex": {"appid": "1172470", "name": "Apex Legends"},
+    "虹彩六號": {"appid": "359550", "name": "Rainbow Six Siege (虹彩六號：圍攻行動)"},
+    "絕地戰兵": {"appid": "553850", "name": "HELLDIVERS 2 (絕地戰兵 2)"},
+    "瓦爾海姆": {"appid": "892970", "name": "Valheim (瓦爾海姆)"},
+    "方舟": {"appid": "2399830", "name": "ARK: Survival Ascended (方舟：生存飛升)"},
+    "rust": {"appid": "252490", "name": "Rust"},
+    "星露谷": {"appid": "413150", "name": "Stardew Valley (星露谷物語)"},
+    "文明": {"appid": "289070", "name": "Civilization VI (文明帝國 VI)"},
+    "都市天際線": {"appid": "949230", "name": "Cities: Skylines II (都市：天際線 2)"},
+    "地平線": {"appid": "1551360", "name": "Forza Horizon 5 (極限競速：地平線 5)"},
+    "2k": {"appid": "2878980", "name": "NBA 2K25"},
+    "fc": {"appid": "2669320", "name": "EA SPORTS FC 25"}
 }
+
+# 同類型競品資料庫（供系統依據遊戲 A 的類型自動推薦同類遊戲）
+SAME_GENRE_CATALOG = [
+    {"appid": "2358720", "name": "Black Myth: Wukong (黑神話：悟空)", "short": "黑神話：悟空", "category": "動作 RPG", "genres": ["動作", "角色扮演", "冒險", "Action", "RPG", "Adventure"]},
+    {"appid": "1245620", "name": "ELDEN RING (艾爾登法環)", "short": "艾爾登法環", "category": "動作 RPG", "genres": ["動作", "角色扮演", "Action", "RPG"]},
+    {"appid": "814380", "name": "Sekiro: Shadows Die Twice (隻狼：暗影雙死)", "short": "隻狼：暗影雙死", "category": "動作 RPG", "genres": ["動作", "冒險", "Action", "Adventure"]},
+    {"appid": "2246340", "name": "Monster Hunter Wilds (魔物獵人 荒野)", "short": "魔物獵人 荒野", "category": "動作 RPG", "genres": ["動作", "角色扮演", "冒險", "Action", "RPG", "Adventure"]},
+    {"appid": "1091500", "name": "Cyberpunk 2077 (電馭叛客 2077)", "short": "電馭叛客 2077", "category": "開放世界 RPG", "genres": ["角色扮演", "動作", "RPG", "Action"]},
+    {"appid": "292030", "name": "The Witcher 3: Wild Hunt (巫師 3)", "short": "巫師 3：狂獵", "category": "開放世界 RPG", "genres": ["角色扮演", "RPG"]},
+    {"appid": "1086940", "name": "Baldur's Gate 3 (柏德之門 3)", "short": "柏德之門 3", "category": "角色扮演 RPG", "genres": ["角色扮演", "策略", "冒險", "RPG", "Strategy", "Adventure"]},
+    {"appid": "578080", "name": "PUBG: BATTLEGROUNDS (絕地求生)", "short": "PUBG 絕地求生", "category": "多人射擊競技", "genres": ["動作", "冒險", "大型多人連線", "免費遊玩", "Action", "Massively Multiplayer", "Free To Play"]},
+    {"appid": "1172470", "name": "Apex Legends", "short": "Apex Legends", "category": "多人射擊競技", "genres": ["動作", "冒險", "免費遊玩", "Action", "Free To Play"]},
+    {"appid": "730", "name": "Counter-Strike 2 (CS2)", "short": "CS2", "category": "多人射擊競技", "genres": ["動作", "免費遊玩", "Action", "Free To Play"]},
+    {"appid": "359550", "name": "Rainbow Six Siege (虹彩六號：圍攻行動)", "short": "虹彩六號：圍攻行動", "category": "多人射擊競技", "genres": ["動作", "Action"]},
+    {"appid": "553850", "name": "HELLDIVERS 2 (絕地戰兵 2)", "short": "絕地戰兵 2", "category": "多人合作射擊", "genres": ["動作", "Action"]},
+    {"appid": "1623730", "name": "Palworld (幻獸帕魯)", "short": "幻獸帕魯", "category": "開放世界生存", "genres": ["動作", "冒險", "獨立", "角色扮演", "搶先體驗", "Action", "Adventure", "Indie", "RPG"]},
+    {"appid": "2399830", "name": "ARK: Survival Ascended (方舟：生存飛升)", "short": "方舟：生存飛升", "category": "開放世界生存", "genres": ["動作", "冒險", "獨立", "角色扮演", "大型多人連線", "Action", "Adventure", "Indie", "RPG"]},
+    {"appid": "892970", "name": "Valheim (瓦爾海姆)", "short": "瓦爾海姆", "category": "開放世界生存", "genres": ["動作", "冒險", "獨立", "角色扮演", "Action", "Adventure", "Indie", "RPG"]},
+    {"appid": "252490", "name": "Rust", "short": "Rust 腐蝕", "category": "多人開放世界生存", "genres": ["動作", "冒險", "獨立", "大型多人連線", "角色扮演", "Action", "Adventure", "Indie", "Massively Multiplayer"]},
+    {"appid": "2878980", "name": "NBA 2K25", "short": "NBA 2K25", "category": "運動競技", "genres": ["運動", "模擬", "Sports", "Simulation"]},
+    {"appid": "2669320", "name": "EA SPORTS FC 25", "short": "EA SPORTS FC 25", "category": "運動競技", "genres": ["運動", "模擬", "Sports", "Simulation"]},
+    {"appid": "1551360", "name": "Forza Horizon 5 (極限競速：地平線 5)", "short": "極限競速：地平線 5", "category": "競速模擬", "genres": ["競速", "運動", "模擬", "動作", "Racing", "Sports", "Simulation"]},
+    {"appid": "227300", "name": "Euro Truck Simulator 2 (歐洲卡車模擬 2)", "short": "歐洲卡車模擬 2", "category": "模擬經營", "genres": ["模擬", "獨立", "Simulation", "Indie"]},
+    {"appid": "289070", "name": "Civilization VI (文明帝國 VI)", "short": "文明帝國 VI", "category": "策略模擬", "genres": ["策略", "Strategy"]},
+    {"appid": "949230", "name": "Cities: Skylines II (都市：天際線 2)", "short": "都市：天際線 2", "category": "模擬經營", "genres": ["模擬", "策略", "Simulation", "Strategy"]},
+    {"appid": "413150", "name": "Stardew Valley (星露谷物語)", "short": "星露谷物語", "category": "休閒模擬 RPG", "genres": ["獨立", "角色扮演", "模擬", "休閒", "Indie", "RPG", "Simulation", "Casual"]}
+]
+
+CURATED_PEER_MAP = {
+    "2358720": ["1245620", "814380", "2246340"],
+    "1245620": ["2358720", "814380", "2246340"],
+    "814380":  ["2358720", "1245620", "2246340"],
+    "2246340": ["2358720", "1245620", "814380"],
+    "1091500": ["292030", "1245620", "1086940"],
+    "578080":  ["1172470", "730", "359550"],
+    "1172470": ["578080", "730", "359550"],
+    "730":     ["578080", "1172470", "359550"],
+    "359550":  ["730", "578080", "1172470"],
+    "553850":  ["578080", "1172470", "359550"],
+    "1623730": ["2399830", "892970", "252490"],
+    "2399830": ["1623730", "892970", "252490"],
+    "892970":  ["1623730", "2399830", "252490"],
+    "252490":  ["1623730", "2399830", "892970"],
+    "2878980": ["2669320", "1551360", "227300"],
+    "2669320": ["2878980", "1551360", "227300"],
+}
+
+CATALOG_BY_ID = {g["appid"]: g for g in SAME_GENRE_CATALOG}
 
 GAME_SNAPSHOT_POOLS = {
     "2358720": [
@@ -227,6 +292,16 @@ GAME_SNAPSHOT_POOLS = {
         ("美術風格與戰鬥打擊感神作等級，雖然偶爾有小bug但整體非常震撼推薦", True, 45.2, 600.0, 31),
         ("畫質精緻到像在看電影，Boss戰演出超美，這價格完全良心之作", True, 52.0, 840.0, 40)
     ],
+    "1245620": [
+        ("DLC幽影樹數值平衡完全失控，王的傷害破格兩刀秒人，玩到後面變成純坐牢直接棄坑", False, 95.0, 0.0, 88),
+        ("後期Boss難度曲線太離譜，武器削弱太多導致流派沒辦法玩，數值設計很讓人失望", False, 120.0, 10.0, 65),
+        ("打大王時視角鎖定一直亂飄，地圖引導也不夠清楚，探索機制有時很折磨", False, 42.0, 15.0, 44),
+        ("開放世界場景一開光追幀數就掉到30幀，偶爾還會卡頓閃退，優化還是不夠好", False, 1.8, 0.0, 37),
+        ("連線合作找朋友召喚常常斷線連不上伺服器，多人機制真的該改進", False, 64.0, 25.0, 29),
+        ("部分法術被削弱後打起來比較辛苦，但熟悉節奏後還是每天繼續推圖", False, 150.0, 520.0, 14),
+        ("雖然偶爾卡頓但開放世界美術風景跟探索感依然神作等級，非常推薦", True, 180.0, 900.0, 52),
+        ("美術光影與地圖設計頂尖，戰鬥手感流暢好玩，值得一玩再玩", True, 210.0, 1100.0, 41)
+    ],
     "578080": [
         ("幀數優化還是一樣糟糕，煙霧彈一丟FPS直接掉到30，顯卡風扇狂轉直接關遊戲退坑", False, 1.7, 0.0, 42),
         ("每次改版更新完就必閃退報錯，記憶體占用高到離譜，優化越做越回去", False, 14.3, 0.0, 35),
@@ -238,6 +313,16 @@ GAME_SNAPSHOT_POOLS = {
         ("武器數值平衡越改越爛，某幾把衝鋒槍傷害超模，但習慣後還是每天上線打兩把", False, 510.5, 420.0, 18),
         ("跟朋友四排吃雞還是很歡樂，地圖機制豐富，只是偶爾會遇到外掛", True, 650.0, 960.0, 22),
         ("槍械手感跟戰術配合依然是射擊遊戲頂尖，老玩家還是很推薦", True, 820.0, 1200.0, 19)
+    ],
+    "1172470": [
+        ("伺服器根本土豆做的，每兩場就封包遺失掉線斷線，延遲高到沒辦法對槍直接退坑", False, 240.0, 0.0, 96),
+        ("配對匹配機制極度失衡，單排一直排到頂獵三排車隊，打起來純坐牢勸退", False, 110.0, 5.0, 82),
+        ("亞服外掛跟腳本作弊抓不完，舉報系統完全沒反應，徹底對這遊戲失望", False, 350.0, 0.0, 105),
+        ("新賽季英雄數值平衡做壞了，某角色技能超模破壞體驗，希望快點削弱", False, 190.0, 420.0, 31),
+        ("改版通行證機制越來越坑，加上偶爾伺服器跳ping，先退坑觀望", False, 85.0, 10.0, 48),
+        ("更新後進遊戲偶爾報錯閃退，還好重開能連回去繼續打", False, 130.0, 480.0, 12),
+        ("移動手感跟團隊槍戰節奏還是射擊遊戲裡最好玩的，跟朋友開黑很歡樂推薦", True, 410.0, 860.0, 39),
+        ("角色技能搭配機制優秀，畫面特效流暢，老玩家依舊推薦", True, 520.0, 950.0, 27)
     ],
     "1623730": [
         ("記憶體洩漏問題嚴重，玩兩小時FPS就暴跌必須重開遊戲，優化太差退坑了", False, 1.9, 0.0, 43),
@@ -268,7 +353,7 @@ DEFAULT_SNAPSHOT_POOL = [
 ]
 
 # ==========================================
-# 3. 核心演算法與資料採集函式
+# 3. 核心演算法、Steam 遊戲類型偵測與同類推薦
 # ==========================================
 def classify_lifecycle(hrs):
     if hrs <= 2.0:
@@ -301,32 +386,90 @@ def highlight_keywords(text, aspect_name):
     return escaped
 
 @st.cache_data(ttl=3600)
-def get_game_header_url(appid):
+def get_game_details(appid):
+    """取得 Steam 遊戲的最新封面圖與官方遊戲類型標籤"""
     if not str(appid).isdigit():
-        return None
+        return {"header_image": None, "genres": []}
     headers = {"User-Agent": "Mozilla/5.0"}
+    header_url = None
+    genres = []
     try:
         res = requests.get(
-            f"https://store.steampowered.com/api/appdetails?appids={appid}&filters=basic",
+            f"https://store.steampowered.com/api/appdetails?appids={appid}&l=tchinese",
             headers=headers, timeout=5
         )
         if res.status_code == 200:
             clean_txt = res.text.lstrip('\ufeff').strip()
             data = json.loads(clean_txt).get(str(appid), {})
-            if data.get("success") and data.get("data", {}).get("header_image"):
-                return data["data"]["header_image"]
+            if data.get("success") and data.get("data"):
+                info = data["data"]
+                header_url = info.get("header_image")
+                genres = [g.get("description", "") for g in info.get("genres", []) if g.get("description")]
     except Exception:
         pass
-    for url in [
-        f"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{appid}/header.jpg",
-        f"https://cdn.akamai.steamstatic.com/steam/apps/{appid}/header.jpg"
-    ]:
-        try:
-            if requests.head(url, headers=headers, timeout=3).status_code == 200:
-                return url
-        except Exception:
-            pass
-    return None
+
+    if not genres and str(appid) in CATALOG_BY_ID:
+        genres = [g for g in CATALOG_BY_ID[str(appid)]["genres"] if re.search(r'[\u4e00-\u9fff]', g)]
+
+    if not header_url:
+        for url in [
+            f"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{appid}/header.jpg",
+            f"https://cdn.akamai.steamstatic.com/steam/apps/{appid}/header.jpg"
+        ]:
+            try:
+                if requests.head(url, headers=headers, timeout=3).status_code == 200:
+                    header_url = url
+                    break
+            except Exception:
+                pass
+
+    return {"header_image": header_url, "genres": genres}
+
+def get_game_header_url(appid):
+    return get_game_details(appid).get("header_image")
+
+def recommend_same_genre_games(appid, game_name="", top_k=3):
+    """依據目標遊戲的 Steam 類型標籤，自動推薦最相近的同類型競品"""
+    aid = str(appid) if appid else ""
+    details = get_game_details(aid) if aid.isdigit() else {"genres": []}
+    target_genres = details.get("genres", [])
+
+    if aid in CURATED_PEER_MAP:
+        recs = [CATALOG_BY_ID[pid] for pid in CURATED_PEER_MAP[aid] if pid in CATALOG_BY_ID and pid != aid]
+        return recs[:top_k], target_genres
+
+    name_low = str(game_name).lower()
+    inferred_genres = list(target_genres)
+    if any(k in name_low for k in ["nba", "2k", "fc ", "fifa", "madden", "mlb", "wwe", "tennis"]):
+        inferred_genres += ["運動", "模擬", "Sports", "Simulation"]
+    elif any(k in name_low for k in ["forza", "f1", "need for speed", "racing", "rally", "競速"]):
+        inferred_genres += ["競速", "運動", "Racing", "Sports"]
+    elif any(k in name_low for k in ["call of duty", "battlefield", "valorant", "counter-strike", "shooter", "pubg", "apex"]):
+        inferred_genres += ["動作", "大型多人連線", "免費遊玩", "Action", "Free To Play"]
+    elif any(k in name_low for k in ["survival", "craft", "生存", "建造", "方舟", "帕魯"]):
+        inferred_genres += ["冒險", "獨立", "角色扮演", "Adventure", "Indie", "RPG"]
+    elif any(k in name_low for k in ["civilization", "total war", "age of empires", "cities", "策略", "模擬"]):
+        inferred_genres += ["策略", "模擬", "Strategy", "Simulation"]
+
+    target_set = set(g.lower() for g in inferred_genres if g)
+    scored = []
+    for item in SAME_GENRE_CATALOG:
+        if item["appid"] == aid:
+            continue
+        item_set = set(g.lower() for g in item["genres"])
+        overlap = len(target_set & item_set)
+        bonus = 0
+        for special in ["運動", "sports", "競速", "racing", "策略", "strategy", "模擬", "simulation", "免費遊玩", "free to play", "獨立", "indie"]:
+            if special in target_set and special in item_set:
+                bonus += 2
+        scored.append((overlap + bonus, item))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    if scored and scored[0][0] > 0:
+        recs = [x[1] for x in scored[:top_k]]
+    else:
+        recs = [CATALOG_BY_ID["1245620"], CATALOG_BY_ID["814380"], CATALOG_BY_ID["2246340"]]
+    return recs, (target_genres if target_genres else [g for g in inferred_genres if re.search(r'[\u4e00-\u9fff]', g)][:3])
 
 @st.cache_data(ttl=600)
 def smart_steam_search(term):
@@ -410,7 +553,7 @@ def fetch_steam_data(appid, target_count, churn_threshold_mins, progress_bar=Non
             if progress_bar and status_text:
                 curr = min(len(reviews_dict), target_count)
                 progress_bar.progress(curr / target_count)
-                status_text.text(f"🕵️‍♂️ 正在收集 Steam 玩家評論與遊玩時數... ({curr:,} / {target_count:,} 則)")
+                status_text.text(f"正在收集 Steam 玩家評論與遊玩時數... ({curr:,} / {target_count:,} 則)")
             time.sleep(0.25)
 
     df = pd.DataFrame(list(reviews_dict.values()))
@@ -603,35 +746,6 @@ def run_sensitivity_kendall_w(df_reviews, prior_strength):
     w_val = (12.0 * s_val) / (m ** 2 * (k ** 3 - k)) if k > 1 else 1.0
     return pd.DataFrame(trend_records), round(min(1.0, max(0.0, w_val)), 4)
 
-def analyze_single_review_sandbox(text, overall_is_neg):
-    clauses = [c.strip() for c in re.split(r'[，。！？；\n,.!?;]+', text) if c.strip()]
-    clause_rows = []
-    sent_aspects = {}
-    doc_aspects = {}
-
-    for asp, kws in ASPECT_KEYWORDS.items():
-        if any(kw.lower() in text.lower() for kw in kws):
-            doc_aspects[asp] = "誤判/判為負評 ❌" if overall_is_neg else "判為好評 ✅"
-
-    for idx, cl in enumerate(clauses, 1):
-        cl_low = cl.lower()
-        has_pos = [pw for pw in POS_WORDS if pw in cl_low]
-        has_neg = [nw for nw in NEG_WORDS if nw in cl_low]
-        hits = []
-        for asp, kws in ASPECT_KEYWORDS.items():
-            matched_kws = [kw for kw in kws if kw.lower() in cl_low]
-            if matched_kws:
-                is_neg = False if (has_pos and not has_neg) else (True if has_neg else overall_is_neg)
-                sent_aspects[asp] = "真正痛點 ❌" if (sent_aspects.get(asp) == "真正痛點 ❌" or is_neg) else "玩家稱讚 ✅"
-                hits.append(f"{asp}（{'負面痛點' if is_neg else '正面好評'}）")
-        clause_rows.append({
-            "第幾句": f"第 {idx} 句",
-            "拆解後的子句": cl,
-            "抓到的情緒字": f"好評詞：{','.join(has_pos) or '無'} ｜ 負評詞：{','.join(has_neg) or '無'}",
-            "本系統判定結果": "、".join(hits) if hits else "一般敘述"
-        })
-    return pd.DataFrame(clause_rows), doc_aspects, sent_aspects
-
 def generate_markdown_brief(game_name, total_n, neg_ratio, churn_in_neg, refund_cnt, churn_mins, ppi_df):
     top1 = ppi_df.iloc[0]
     cols = ["痛點屬性", "提及次數", "負面提及數", "平滑負評率 (%)", "平滑流失轉化率 (%)", "流失勝算比 (OR)", "卡方檢定 p-value", "痛點衝擊指數 (PPI)"]
@@ -647,7 +761,7 @@ def generate_markdown_brief(game_name, total_n, neg_ratio, churn_in_neg, refund_
     lines = [
         f"# Steam 遊戲體檢報告：{game_name}",
         "",
-        "## 1. 一眼看懂核心指標",
+        "## 1. 核心指標摘要",
         f"- **分析評論總數**：{total_n:,} 則",
         f"- **整體負評比例**：{neg_ratio:.1f}%",
         f"- **罵完真的退坑比例 (評論後遊玩 ≤ {churn_mins} 分鐘)**：{churn_in_neg:.1f}%",
@@ -657,7 +771,7 @@ def generate_markdown_brief(game_name, total_n, neg_ratio, churn_in_neg, refund_
         md_table,
         "",
         "## 3. 優先修復建議",
-        f"- **🚨 馬上優先處理**：【{top1['痛點屬性']}】（急迫度 {top1['痛點衝擊指數 (PPI)']} 分｜退坑風險倍數 {top1['流失勝算比 (OR)']}｜中位數遊玩時數 {top1['負評中位數時數 (hr)']} 小時）。"
+        f"- **第一優先（緊急熱修）**：【{top1['痛點屬性']}】（急迫度 {top1['痛點衝擊指數 (PPI)']} 分｜退坑風險倍數 {top1['流失勝算比 (OR)']}｜中位數遊玩時數 {top1['負評中位數時數 (hr)']} 小時）。"
     ]
     return "\n".join(lines)
 
@@ -698,15 +812,15 @@ def load_game_pair(main_appid, main_name, pk_appid, pk_name, n_cnt, c_mins, use_
 # 5. 側邊欄：隨時切換遊戲 ＋ 進階資料科學參數
 # ==========================================
 with st.sidebar:
-    st.header("🎮 快速操作面板")
+    st.header("操作面板")
     if st.session_state["data_ready"]:
-        if st.button("🏠 回到首頁重新挑選遊戲", use_container_width=True):
+        if st.button("回到首頁重新挑選遊戲", use_container_width=True):
             st.session_state["data_ready"] = False
             st.rerun()
         st.divider()
 
-    st.subheader("🔄 快速切換／比較遊戲")
-    sb_kw1 = st.text_input("🔍 主體檢遊戲", value="黑神話", key="sb_kw1")
+    st.subheader("快速切換／比較遊戲")
+    sb_kw1 = st.text_input("主體檢遊戲", value="黑神話", key="sb_kw1")
     sb_games1 = smart_steam_search(sb_kw1)
     sb_appid1, sb_name1 = None, ""
     if sb_games1:
@@ -716,10 +830,10 @@ with st.sidebar:
     elif sb_kw1.isdigit():
         sb_appid1, sb_name1 = sb_kw1, f"AppID {sb_kw1}"
 
-    sb_pk_on = st.toggle("⚔️ 開啟雙遊戲 PK 比較", value=True, key="sb_pk_on")
+    sb_pk_on = st.toggle("開啟雙遊戲 PK 比較", value=True, key="sb_pk_on")
     sb_appid2, sb_name2 = None, ""
     if sb_pk_on:
-        sb_kw2 = st.text_input("🔍 對照組遊戲", value="絕地求生", key="sb_kw2")
+        sb_kw2 = st.text_input("對照組遊戲", value="艾爾登法環", key="sb_kw2")
         sb_games2 = smart_steam_search(sb_kw2)
         if sb_games2:
             sb_opts2 = {g["display"]: g for g in sb_games2}
@@ -728,16 +842,20 @@ with st.sidebar:
         elif sb_kw2.isdigit():
             sb_appid2, sb_name2 = sb_kw2, f"AppID {sb_kw2}"
 
-    sb_run = st.button("🚀 套用並開始體檢", type="primary", use_container_width=True, key="sb_run")
+    sb_run = st.button("套用並開始體檢", type="primary", use_container_width=True, key="sb_run")
 
     st.divider()
+
     with st.expander("🔧 進階參數調整", expanded=False):
+
+    with st.expander("進階資料科學參數（評審/研究用）", expanded=False):
+
         target_count = st.slider("分析評論數量 (N)", 100, 1200, 400, 100)
         churn_mins = st.slider("判定「真的退坑」門檻 ΔT (分鐘)", 0, 180, 60, 15,
                                help="留負評後，如果後續新增遊玩時間不超過這個分鐘數，就判定為實質退坑")
         prior_c = st.slider("貝葉斯小樣本平滑強度 (C)", 0, 20, 10, 2,
                             help="防止冷門屬性因為樣本太少而衝到 100% 負評")
-        uploaded_csv = st.file_uploader("📂 上傳本地評論 CSV 檔", type=["csv"])
+        uploaded_csv = st.file_uploader("上傳本地評論 CSV 檔", type=["csv"])
 
 if uploaded_csv is not None:
     df_up = pd.read_csv(uploaded_csv)
@@ -756,20 +874,20 @@ if sb_run and sb_appid1:
     load_game_pair(sb_appid1, sb_name1, sb_appid2, sb_name2, target_count, churn_mins, use_pk=sb_pk_on)
 
 # ==========================================
-# 6. 首頁畫面：保留讓用戶自由挑選要分析＆比較的遊戲
+# 6. 首頁畫面：自由選擇遊戲 ＋ 同類型競品自動推薦
 # ==========================================
 if not st.session_state["data_ready"]:
     st.markdown("""
     <div class="picker-header">
-        <div style="font-size:19px;font-weight:800;color:#ffffff;margin-bottom:4px;">🎯 第一步：選擇你想體檢與比較的 Steam 遊戲</div>
-        <div style="font-size:13.5px;color:#b8cde0;">輸入任意兩款 Steam 遊戲的中英文名稱（或 AppID）即時配對比較，也可以只分析單款遊戲，或直接點下方熱門組合一鍵體驗！</div>
+        <div style="font-size:19px;font-weight:800;color:#ffffff;margin-bottom:4px;">第一步：選擇你想體檢與比較的 Steam 遊戲</div>
+        <div style="font-size:13.5px;color:#b8cde0;">先在左側選出「遊戲 A」，系統會自動偵測它的 Steam 遊戲類型，並在下方推薦<strong>同類型的競品遊戲</strong>讓你一鍵比較。</div>
     </div>
     """, unsafe_allow_html=True)
 
     col_g1, col_vs, col_g2 = st.columns([1.2, 0.25, 1.2])
 
     with col_g1:
-        st.markdown("#### 🔵 遊戲 A（主要體檢對象）")
+        st.markdown('<h4><span class="dot-blue"></span>遊戲 A（主要體檢對象）</h4>', unsafe_allow_html=True)
         home_kw1 = st.text_input("輸入遊戲名稱或 AppID", value="黑神話", key="home_kw1")
         home_games1 = smart_steam_search(home_kw1)
         h_appid1, h_name1 = None, ""
@@ -781,19 +899,22 @@ if not st.session_state["data_ready"]:
             h_appid1, h_name1 = home_kw1, f"AppID {home_kw1}"
 
         if h_appid1:
-            preview_url1 = get_game_header_url(h_appid1)
-            if preview_url1:
-                st.image(preview_url1, use_container_width=True)
+            g1_details = get_game_details(h_appid1)
+            if g1_details["genres"]:
+                pills_html = "".join([f'<span class="genre-pill">{g}</span>' for g in g1_details["genres"][:4]])
+                st.markdown(pills_html, unsafe_allow_html=True)
+            if g1_details["header_image"]:
+                st.image(g1_details["header_image"], use_container_width=True)
 
     with col_vs:
         st.markdown("<div style='text-align:center;font-size:32px;font-weight:900;color:#66c0f4;margin-top:95px;'>VS</div>", unsafe_allow_html=True)
 
     with col_g2:
-        st.markdown("#### 🔴 遊戲 B（比較對照對象）")
-        home_pk_on = st.checkbox("⚔️ 同時比較第二款遊戲（開啟雷達圖 PK）", value=True, key="home_pk_on")
+        st.markdown('<h4><span class="dot-red"></span>遊戲 B（同類型比較對象）</h4>', unsafe_allow_html=True)
+        home_pk_on = st.checkbox("同時比較第二款遊戲（開啟雷達圖 PK）", value=True, key="home_pk_on")
         h_appid2, h_name2 = None, ""
         if home_pk_on:
-            home_kw2 = st.text_input("輸入要比較的遊戲名稱或 AppID", value="絕地求生", key="home_kw2")
+            home_kw2 = st.text_input("輸入要比較的遊戲名稱或 AppID", value="艾爾登法環", key="home_kw2")
             home_games2 = smart_steam_search(home_kw2)
             if home_games2:
                 h_opts2 = {g["display"]: g for g in home_games2}
@@ -803,14 +924,17 @@ if not st.session_state["data_ready"]:
                 h_appid2, h_name2 = home_kw2, f"AppID {home_kw2}"
 
             if h_appid2:
-                preview_url2 = get_game_header_url(h_appid2)
-                if preview_url2:
-                    st.image(preview_url2, use_container_width=True)
+                g2_details = get_game_details(h_appid2)
+                if g2_details["genres"]:
+                    pills_html2 = "".join([f'<span class="genre-pill">{g}</span>' for g in g2_details["genres"][:4]])
+                    st.markdown(pills_html2, unsafe_allow_html=True)
+                if g2_details["header_image"]:
+                    st.image(g2_details["header_image"], use_container_width=True)
         else:
-            st.info("目前已切換為「單款遊戲深度體檢」模式，若想進行雙遊戲比較，勾選上方框框即可。")
+            st.info("目前已切換為「單款遊戲深度體檢」模式，若想進行雙遊戲比較，勾選上方選項即可。")
 
     st.write("")
-    btn_label = f"🚀 開始體檢並比較：{h_name1} vs. {h_name2}" if (home_pk_on and h_appid2) else f"🚀 開始體檢：{h_name1}"
+    btn_label = f"開始體檢並比較：{h_name1} vs. {h_name2}" if (home_pk_on and h_appid2) else f"開始體檢：{h_name1}"
     if st.button(btn_label, type="primary", use_container_width=True, key="home_start_btn"):
         if h_appid1:
             load_game_pair(h_appid1, h_name1, h_appid2, h_name2, target_count, churn_mins, use_pk=home_pk_on)
@@ -819,20 +943,37 @@ if not st.session_state["data_ready"]:
             st.warning("請先在左側輸入有效的 Steam 遊戲名稱或 AppID。")
 
     st.divider()
-    st.markdown("#### ⚡ 或一鍵體驗展覽熱門比較組合")
-    p1, p2, p3 = st.columns(3)
-    if p1.button("🐒 黑神話：悟空 vs 🔫 PUBG\n（單機大作 vs 多人競技）", use_container_width=True):
-        load_game_pair("2358720", "Black Myth: Wukong (黑神話：悟空)", "578080", "PUBG: BATTLEGROUNDS (絕地求生)", target_count, churn_mins, use_pk=True)
-        st.rerun()
-    if p2.button("🐾 幻獸帕魯 vs 🐒 黑神話：悟空\n（連線生存 vs 單機動作）", use_container_width=True):
-        load_game_pair("1623730", "Palworld (幻獸帕魯)", "2358720", "Black Myth: Wukong (黑神話：悟空)", target_count, churn_mins, use_pk=True)
-        st.rerun()
-    if p3.button("🔫 PUBG vs 🐾 幻獸帕魯\n（射擊外掛痛點 vs 伺服器斷線）", use_container_width=True):
-        load_game_pair("578080", "PUBG: BATTLEGROUNDS (絕地求生)", "1623730", "Palworld (幻獸帕魯)", target_count, churn_mins, use_pk=True)
-        st.rerun()
+    recs, detected_genres = recommend_same_genre_games(h_appid1, h_name1, top_k=3)
+    genre_label = " / ".join(detected_genres[:3]) if detected_genres else "同類型熱門"
+    st.markdown(f"#### 為《{h_name1 or '目標遊戲'}》推薦的「同類型競品」一鍵比較")
+    st.caption(f"系統已自動比對 Steam 官方遊戲類型（**{genre_label}**），點擊下方任一款同類對手即可直接進入雙遊戲雷達圖對比：")
+
+    rec_cols = st.columns(3)
+    for idx, peer in enumerate(recs):
+        with rec_cols[idx]:
+            short_a = CATALOG_BY_ID[str(h_appid1)]["short"] if str(h_appid1) in CATALOG_BY_ID else (h_name1[:16] if h_name1 else "遊戲 A")
+            btn_text = f"{short_a} vs {peer['short']}\n（同屬：{peer['category']}）"
+            if st.button(btn_text, use_container_width=True, key=f"rec_same_genre_{idx}_{peer['appid']}"):
+                target_a_id = h_appid1 or "2358720"
+                target_a_name = h_name1 or "Black Myth: Wukong (黑神話：悟空)"
+                load_game_pair(target_a_id, target_a_name, peer["appid"], peer["name"], target_count, churn_mins, use_pk=True)
+                st.rerun()
+
+    st.write("")
+    with st.expander("查看其他熱門「同類型」展覽示範組（射擊／生存／運動）", expanded=False):
+        g_col1, g_col2, g_col3 = st.columns(3)
+        if g_col1.button("PUBG vs Apex Legends\n（同屬：多人大逃殺射擊）", use_container_width=True, key="preset_fps"):
+            load_game_pair("578080", "PUBG: BATTLEGROUNDS (絕地求生)", "1172470", "Apex Legends", target_count, churn_mins, use_pk=True)
+            st.rerun()
+        if g_col2.button("幻獸帕魯 vs 方舟：生存飛升\n（同屬：開放世界生存建造）", use_container_width=True, key="preset_surv"):
+            load_game_pair("1623730", "Palworld (幻獸帕魯)", "2399830", "ARK: Survival Ascended (方舟：生存飛升)", target_count, churn_mins, use_pk=True)
+            st.rerun()
+        if g_col3.button("NBA 2K25 vs EA SPORTS FC 25\n（同屬：年度運動競技模擬）", use_container_width=True, key="preset_sport"):
+            load_game_pair("2878980", "NBA 2K25", "2669320", "EA SPORTS FC 25", target_count, churn_mins, use_pk=True)
+            st.rerun()
 
 # ==========================================
-# 7. 分析結果儀表板（白話優先，評審進階頁收尾）
+# 7. 分析結果儀表板（4 大核心分頁）
 # ==========================================
 else:
     df_reviews = st.session_state["df_reviews"].copy()
@@ -851,7 +992,6 @@ else:
     churn_in_neg = (neg_df["is_churned"].sum() / len(neg_df) * 100) if len(neg_df) > 0 else 0.0
     refund_cnt = len(neg_df[(neg_df["is_churned"]) & (neg_df["playtime_at_review_hrs"] <= 2.0)])
 
-    # 預先建立機器學習模型供互動頁與評審驗證頁共用
     X_df, y_arr = build_ml_dataset(df_reviews, df_absa)
     unique_classes, counts = np.unique(y_arr, return_counts=True)
     ml_ready = (len(unique_classes) == 2 and counts.min() >= 5 and len(X_df) >= 30)
@@ -863,66 +1003,63 @@ else:
         lr_pipe.fit(X_tr, y_tr)
         rf_clf.fit(X_tr, y_tr)
 
-    # 頂部遊戲封面 + 資訊橫幅 + 返回選單按鈕
     col_img, col_info = st.columns([1.1, 2.9])
     with col_img:
         header_url = get_game_header_url(selected_appid)
         if header_url:
             st.image(header_url, use_container_width=True)
         else:
-            st.info(f"🎮 {selected_name}")
+            st.info(selected_name)
 
     with col_info:
         top_r1, top_r2 = st.columns([2.6, 1.0])
         with top_r1:
-            st.subheader(f"🩺 目前體檢遊戲：{selected_name}")
+            st.subheader(f"目前體檢遊戲：{selected_name}")
         with top_r2:
-            if st.button("⬅️ 重選／更換比較遊戲", use_container_width=True):
+            if st.button("重選／更換比較遊戲", use_container_width=True):
                 st.session_state["data_ready"] = False
                 st.rerun()
 
         if source_type == "live":
-            st.success("✅ 已連線 Steam 官方商店，即時抓取最新繁／簡體中文評論完成分析")
+            st.success("資料來源：已連線 Steam 官方商店，即時抓取最新繁／簡體中文評論完成分析")
         elif source_type == "uploaded_csv":
-            st.success("✅ 使用您上傳的本地評論資料集完成分析")
+            st.success("資料來源：使用本地上傳的評論資料集完成分析")
         else:
-            st.info("📦 目前顯示該遊戲的離線歷史基準資料集（若 Steam 限流時自動啟用，確保展覽不斷線）")
+            st.info("資料來源：已自動載入該遊戲離線歷史基準資料集（Offline Benchmark Snapshot）確保展覽不斷線")
 
         dl1, dl2 = st.columns(2)
         with dl1:
-            st.download_button("💾 下載原始評論資料 (.csv)", data=df_reviews.to_csv(index=False).encode("utf-8-sig"),
+            st.download_button("下載原始評論資料 (.csv)", data=df_reviews.to_csv(index=False).encode("utf-8-sig"),
                                file_name=f"steam_data_{selected_appid}.csv", mime="text/csv", use_container_width=True)
         with dl2:
             if not ppi_df.empty:
                 md_brief = generate_markdown_brief(selected_name, total_n, neg_ratio, churn_in_neg, refund_cnt, churn_mins, ppi_df)
-                st.download_button("📄 一鍵匯出體檢報告 (.md)", data=md_brief.encode("utf-8"),
+                st.download_button("匯出體檢報告 (.md)", data=md_brief.encode("utf-8"),
                                    file_name=f"steam_report_{selected_appid}.md", mime="text/markdown", use_container_width=True)
 
-    # 一句話 3 秒體檢結論
     if not ppi_df.empty:
         top1 = ppi_df.iloc[0]
         top1_name = top1["痛點屬性"]
         top1_plain = ASPECT_PLAIN_DESC.get(top1_name, "核心遊戲體驗問題")
         st.markdown(f"""
         <div class="verdict-box">
-            <div class="verdict-title">🚨 3 秒體檢結論：最害《{selected_name}》玩家退坑的頭號殺手是【{top1_name}】！</div>
+            <div class="verdict-title">3 秒體檢結論：最害《{selected_name}》玩家退坑的頭號殺手是【{top1_name}】</div>
             <div class="verdict-body">
                 • <strong>核心災情</strong>：大量玩家反映「<strong>{top1_plain}</strong>」，系統算出它的修復急迫度高達 <strong>{top1['痛點衝擊指數 (PPI)']} / 100 分</strong>（退坑風險是一般玩家的 <strong>{top1['流失勝算比 (OR)']}</strong>）。<br>
-                • <strong>營收警訊</strong>：每 10 位給負評的玩家裡，就有 <strong>{churn_in_neg/10:.1f} 位</strong>罵完後幾乎沒再開過遊戲，其中 <strong>{refund_cnt} 位</strong>更是在剛買 2 小時內就踩到 Steam 無條件退款紅線！
+                • <strong>營收警訊</strong>：每 10 位給負評的玩家裡，就有 <strong>{churn_in_neg/10:.1f} 位</strong>罵完後幾乎沒再開過遊戲，其中 <strong>{refund_cnt} 位</strong>更是在剛買 2 小時內就踩到 Steam 無條件退款紅線。
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-    # 4 張白話 KPI 卡片
     k1, k2, k3, k4 = st.columns(4)
     with k1:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-title">📝 這次讀了幾則評論</div><div class="kpi-value" style="color:#66c0f4;">{total_n:,} 則</div><div class="kpi-desc">已自動過濾重複與亂碼</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-title">有效分析評論</div><div class="kpi-value" style="color:#66c0f4;">{total_n:,} 則</div><div class="kpi-desc">已自動過濾重複與亂碼</div></div>', unsafe_allow_html=True)
     with k2:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-title">👎 多少人給不推薦</div><div class="kpi-value" style="color:#ffa15a;">{neg_ratio:.1f}%</div><div class="kpi-desc">共抓出 {len(neg_df):,} 則負面評論</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-title">整體不推薦比例</div><div class="kpi-value" style="color:#ffa15a;">{neg_ratio:.1f}%</div><div class="kpi-desc">共抓出 {len(neg_df):,} 則負面評論</div></div>', unsafe_allow_html=True)
     with k3:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-title">🚪 罵完真的退坑比例</div><div class="kpi-value" style="color:#ff4b4b;">{churn_in_neg:.1f}%</div><div class="kpi-desc">留負評後幾乎沒再開過遊戲</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-title">罵完真的退坑比例</div><div class="kpi-value" style="color:#ff4b4b;">{churn_in_neg:.1f}%</div><div class="kpi-desc">留負評後幾乎沒再開過遊戲</div></div>', unsafe_allow_html=True)
     with k4:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-title">💸 2小時內退款高風險</div><div class="kpi-value" style="color:#4ecdc4;">{refund_cnt} 人</div><div class="kpi-desc">剛買就退坑，直接損失營收</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-title">2 小時內退款高風險</div><div class="kpi-value" style="color:#4ecdc4;">{refund_cnt} 人</div><div class="kpi-desc">剛買就退坑，直接損失營收</div></div>', unsafe_allow_html=True)
 
     st.write("")
 
@@ -930,11 +1067,10 @@ else:
         st.warning("目前樣本中未偵測到足夠的遊戲痛點關鍵字。")
     else:
         tab_labels = [
-            "🩺 一眼看懂：最該先修什麼？",
-            "⏳ 玩家什麼時候棄坑？",
-            "🔬 現場互動玩玩看（AI 分句＋退坑預測機）",
-            "⚔️ 兩款遊戲大 PK",
-            "📐 給評審看：資料科學與統計驗證"
+            "1. 一眼看懂：最該先修什麼",
+            "2. 玩家什麼時候棄坑",
+            "3. 同類型遊戲 PK",
+            "4. 資料科學與統計驗證"
         ]
         tabs = st.tabs(tab_labels)
 
@@ -942,7 +1078,7 @@ else:
         with tabs[0]:
             st.markdown("""
             <div class="explain-strip">
-                💡 <strong>這頁怎麼看？</strong> 左圖告訴你「哪個問題最容易逼走玩家（滿分 100 分）」；右圖直接抓出退坑玩家最常抱怨的具體詞彙，往下滑還能看到「給遊戲公司的修復順序建議」與「玩家真實留言」。
+                <strong>閱讀指引：</strong> 左圖顯示哪個問題最容易逼走玩家（滿分 100 分）；右圖直接抓出退坑玩家最常抱怨的具體詞彙，下方附有給遊戲公司的修復順序建議與玩家真實留言。
             </div>
             """, unsafe_allow_html=True)
 
@@ -953,7 +1089,7 @@ else:
                     x="痛點衝擊指數 (PPI)", y="痛點屬性", orientation="h",
                     text="痛點衝擊指數 (PPI)", color="痛點衝擊指數 (PPI)",
                     color_continuous_scale=["#4ecdc4", "#ffa15a", "#ff4b4b"],
-                    template="plotly_dark", title="🏆 修復急迫度排行榜（分數越高＝越害玩家退坑）"
+                    template="plotly_dark", title="修復急迫度排行榜（分數越高＝越害玩家退坑）"
                 )
                 fig_ppi.update_traces(textposition="outside")
                 fig_ppi.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(23,26,33,0.6)",
@@ -965,42 +1101,39 @@ else:
                 if kw_hits:
                     kw_df = pd.DataFrame(list(kw_hits.items()), columns=["玩家常罵關鍵字", "退坑評論命中次數"]).sort_values("退坑評論命中次數", ascending=True).tail(8)
                     fig_kw = px.bar(kw_df, x="退坑評論命中次數", y="玩家常罵關鍵字", orientation="h", text="退坑評論命中次數",
-                                    template="plotly_dark", title="🔥 退坑玩家最常提到的 8 個關鍵字")
+                                    template="plotly_dark", title="退坑玩家最常提到的 8 個關鍵字")
                     fig_kw.update_traces(marker_color="#66c0f4", textposition="outside")
                     fig_kw.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(23,26,33,0.6)",
                                          yaxis_title="", height=360)
                     st.plotly_chart(fig_kw, use_container_width=True)
 
-            st.markdown("### 🛠️ 系統自動生成：給遊戲公司的 3 階段修復建議")
+            st.markdown("### 給遊戲公司的 3 階段修復建議")
             top1 = ppi_df.iloc[0]
             top2 = ppi_df.iloc[1] if len(ppi_df) > 1 else top1
             low_last = ppi_df.iloc[-1]
 
-            a1, a2, a3 = st.columns(3)
-            with a1:
-                st.markdown(f"""
-                <div class="action-card" style="border-top: 4px solid #ff4b4b;">
-                    <h4 style="color:#ff6b6b;">🚨 第一優先：馬上緊急修復</h4>
-                    <p><strong>鎖定問題：{top1['痛點屬性']}</strong>（急迫度 {top1['痛點衝擊指數 (PPI)']} 分）</p>
-                    <p>遇到這個問題的玩家，平均只玩了 <strong>{top1['負評中位數時數 (hr)']} 小時</strong>就寫負評，最容易引發剛買就退款的雪崩效應，建議研發團隊立刻優先搶修。</p>
-                </div>""", unsafe_allow_html=True)
-            with a2:
-                st.markdown(f"""
-                <div class="action-card" style="border-top: 4px solid #ffa15a;">
-                    <h4 style="color:#ffa15a;">🛡️ 第二優先：近期版本改善</h4>
-                    <p><strong>鎖定問題：{top2['痛點屬性']}</strong>（急迫度 {top2['痛點衝擊指數 (PPI)']} 分）</p>
-                    <p>這個問題會讓 <strong>{top2['平滑流失轉化率 (%)']}%</strong> 的負評玩家選擇退坑，主要傷害玩了約 <strong>{top2['負評中位數時數 (hr)']} 小時</strong>的中期玩家，建議在下個大改版前提出對策。</p>
-                </div>""", unsafe_allow_html=True)
-            with a3:
-                st.markdown(f"""
-                <div class="action-card" style="border-top: 4px solid #4ecdc4;">
-                    <h4 style="color:#4ecdc4;">⚙️ 第三優先：常態慢慢微調</h4>
-                    <p><strong>鎖定問題：{low_last['痛點屬性']}</strong>（急迫度 {low_last['痛點衝擊指數 (PPI)']} 分）</p>
-                    <p>抱怨這塊的玩家通常已玩超過 <strong>{low_last['負評中位數時數 (hr)']} 小時</strong>，屬於邊罵邊玩的核心鐵粉，排進平常例行更新調整即可，不用跟緊急 Bug 搶人力。</p>
-                </div>""", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch;">
+              <div class="action-card" style="border-top: 4px solid #ff4b4b; box-sizing: border-box;">
+                <h4 style="color:#ff6b6b;">P0 第一優先：馬上緊急修復</h4>
+                <p><strong>鎖定問題：{top1['痛點屬性']}</strong>（急迫度 {top1['痛點衝擊指數 (PPI)']} 分）</p>
+                <p>遇到這個問題的玩家，中位數只玩了 <strong>{top1['負評中位數時數 (hr)']} 小時</strong>就寫負評，最容易引發剛買就退款的雪崩效應，建議研發團隊立刻優先搶修。</p>
+              </div>
+              <div class="action-card" style="border-top: 4px solid #ffa15a; box-sizing: border-box;">
+                <h4 style="color:#ffa15a;">P1 第二優先：近期版本改善</h4>
+                <p><strong>鎖定問題：{top2['痛點屬性']}</strong>（急迫度 {top2['痛點衝擊指數 (PPI)']} 分）</p>
+                <p>這個問題會讓 <strong>{top2['平滑流失轉化率 (%)']}%</strong> 的負評玩家選擇退坑，主要傷害玩了約 <strong>{top2['負評中位數時數 (hr)']} 小時</strong>的中期玩家，建議在下個大改版前提出對策。</p>
+              </div>
+              <div class="action-card" style="border-top: 4px solid #4ecdc4; box-sizing: border-box;">
+                <h4 style="color:#4ecdc4;">P2 第三優先：常態慢慢微調</h4>
+                <p><strong>鎖定問題：{low_last['痛點屬性']}</strong>（急迫度 {low_last['痛點衝擊指數 (PPI)']} 分）</p>
+                <p>抱怨這塊的玩家通常已玩超過 <strong>{low_last['負評中位數時數 (hr)']} 小時</strong>，屬於邊罵邊玩的核心鐵粉，排進平常例行更新調整即可，不用跟緊急 Bug 搶人力。</p>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
 
             st.divider()
-            st.markdown("### 💬 看看退坑玩家都在罵什麼（紅底為系統自動抓出的痛點詞）")
+            st.markdown("### 退坑玩家真實原話（紅底為系統自動抓出的痛點詞）")
             sel_asp = st.selectbox("切換想看的問題分類：", ppi_df["痛點屬性"].tolist())
             sub_rev = (
                 df_absa[(df_absa["aspect"] == sel_asp) & (df_absa["is_churned_pain"])]
@@ -1015,7 +1148,7 @@ else:
                 hl_text = highlight_keywords(r_row["text"][:320], sel_asp)
                 st.markdown(f"""
                 <div class="review-card">
-                    <div class="review-meta">{r_row['aspect']} ｜ 當時玩了：{r_row['playtime_hrs']} 小時 ｜ 階段：{r_row['lifecycle']} ｜ 👍 {r_row['votes_up']} 位玩家按讚認同</div>
+                    <div class="review-meta">{r_row['aspect']} ｜ 當時玩了：{r_row['playtime_hrs']} 小時 ｜ 階段：{r_row['lifecycle']} ｜ {r_row['votes_up']} 位玩家按讚認同</div>
                     <div>{hl_text}</div>
                 </div>""", unsafe_allow_html=True)
 
@@ -1023,7 +1156,7 @@ else:
         with tabs[1]:
             st.markdown("""
             <div class="explain-strip">
-                💡 <strong>為什麼要看遊玩時數？</strong> Steam 規定「購買 14 天內且遊玩未滿 2 小時」可無條件退款！<br>
+                <strong>為什麼要看遊玩時數？</strong> Steam 規定「購買 14 天內且遊玩未滿 2 小時」可無條件退款。<br>
                 透過這兩張圖，遊戲公司可以一眼看出：哪些問題會害玩家<strong>剛買就退款（紅色）</strong>，哪些問題則是<strong>讓老玩家慢慢心寒（綠色）</strong>。
             </div>
             """, unsafe_allow_html=True)
@@ -1041,7 +1174,7 @@ else:
                             "2. 玩沒幾天棄坑 (2~20小時)": "#ffa15a",
                             "3. 老玩家心寒 (>20小時)": "#4ecdc4"
                         },
-                        template="plotly_dark", title="⏳ 每個問題分別害「哪個時期的玩家」退坑？"
+                        template="plotly_dark", title="每個問題分別害「哪個時期的玩家」退坑"
                     )
                     fig_lc.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(23,26,33,0.6)", height=370)
                     st.plotly_chart(fig_lc, use_container_width=True)
@@ -1053,7 +1186,7 @@ else:
                     fig_box = px.box(
                         neg_absa_eda, x="寫負評時玩了幾小時", y="問題分類", color="問題分類",
                         log_x=True, template="plotly_dark",
-                        title="📦 負評玩家都玩了多久才受不了？（紅虛線＝2 小時退款門檻）"
+                        title="負評玩家都玩了多久才受不了（紅虛線＝2 小時退款門檻）"
                     )
                     fig_box.add_vline(x=2.0, line_dash="dash", line_color="#ff4b4b",
                                       annotation_text="Steam 2小時退款紅線", annotation_position="top right")
@@ -1071,95 +1204,16 @@ else:
                 fig_ts.add_trace(go.Scatter(x=daily_df["date"].astype(str), y=daily_df["每日負評總數"], mode="lines+markers", name="當天負評總數", line=dict(color="#ffa15a", width=3)))
                 fig_ts.add_trace(go.Scatter(x=daily_df["date"].astype(str), y=daily_df["每日真的退坑人數"], mode="lines+markers", name="罵完真的退坑人數", line=dict(color="#ff4b4b", width=3)))
                 fig_ts.update_layout(
-                    template="plotly_dark", title="📈 每天的負評數 vs. 真的退坑人數變化趨勢（可觀察哪天改版出包）",
+                    template="plotly_dark", title="每天的負評數 vs. 真的退坑人數變化趨勢（可觀察哪天改版出包）",
                     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(23,26,33,0.6)", hovermode="x unified", height=330
                 )
                 st.plotly_chart(fig_ts, use_container_width=True)
 
-        # --- TAB 3: 現場互動玩玩看 ---
+        # --- TAB 3: 同類型遊戲大 PK ---
         with tabs[2]:
             st.markdown("""
             <div class="explain-strip">
-                🎮 <strong>歡迎現場動手玩！</strong> 這裡有兩個互動體驗：① 隨便打一句評論，看系統怎麼「拆句分析不誤判」；② 調調看下方玩家條件，看機器學習模型預測他「退坑的機率有多高」！
-            </div>
-            """, unsafe_allow_html=True)
-
-            st.markdown("### 1️⃣ 測試看看：系統怎麼聽懂「先誇獎、再抱怨」的評論？")
-            sample_input = st.text_area(
-                "✍️ 你可以隨意修改這句測試評論（試試看同時稱讚某個優點、又罵另一個缺點）：",
-                value="這遊戲的畫面美術真的是神作等級，光影超美很震撼！但是進第三章之後一直閃退掉幀，伺服器也常斷線，體驗被毀了直接申請退款。",
-                height=85
-            )
-            sample_neg_flag = st.radio("假設這名玩家最後在 Steam 按下的是：", ["👎 不推薦（負評）", "👍 推薦（好評）"], horizontal=True)
-            is_sample_neg = "不推薦" in sample_neg_flag
-
-            clause_df, doc_res, sent_res = analyze_single_review_sandbox(sample_input, is_sample_neg)
-            sb1, sb2 = st.columns([1.45, 1.0])
-            with sb1:
-                st.caption("🔍 系統先把整段話切成一句一句，再逐句判斷正負面：")
-                st.dataframe(clause_df, use_container_width=True, hide_index=True)
-            with sb2:
-                st.caption("⚖️ 比較結果：傳統做法會誤把『畫面』也當成缺點，本系統能精準分開！")
-                comp_rows = []
-                for asp in set(list(doc_res.keys()) + list(sent_res.keys())):
-                    comp_rows.append({
-                        "提到的面向": asp,
-                        "一般傳統分析": doc_res.get(asp, "-"),
-                        "本系統分句分析": sent_res.get(asp, "-")
-                    })
-                if comp_rows:
-                    st.dataframe(pd.DataFrame(comp_rows), use_container_width=True, hide_index=True)
-
-            st.divider()
-            st.markdown("### 2️⃣ 玩家退坑機率預測機（由機器學習模型即時運算）")
-            if ml_ready:
-                sim_left, sim_right = st.columns([1.4, 1.0])
-                with sim_left:
-                    sim_hr = st.slider("假設這位玩家已經玩了幾小時？", 0.5, 500.0, 1.5, 0.5)
-                    sim_votes = st.slider("他的評論獲得多少其他玩家按讚認同？", 0, 200, 25, 5)
-                    st.write("**勾選他玩遊戲時遇到哪些問題：**")
-                    cb_cols = st.columns(3)
-                    sim_flags = {}
-                    for i, asp in enumerate(ASPECT_KEYWORDS.keys()):
-                        sim_flags[asp] = cb_cols[i % 3].checkbox(asp, value=(i == 0), key=f"sim_{i}")
-
-                with sim_right:
-                    sim_row = {
-                        "遊玩時數 (對數)": np.log1p(sim_hr),
-                        "他人按讚共鳴 (對數)": np.log1p(sim_votes),
-                        "評論字數長度": 45.0
-                    }
-                    for asp in ASPECT_KEYWORDS.keys():
-                        sim_row[f"遇到痛點：{asp}"] = 1.0 if sim_flags[asp] else 0.0
-                    sim_X = pd.DataFrame([sim_row])[X_df.columns]
-                    pred_prob = 0.5 * (lr_pipe.predict_proba(sim_X)[0, 1] + rf_clf.predict_proba(sim_X)[0, 1]) * 100
-
-                    risk_label = "🔴 極高退坑風險！" if pred_prob >= 65 else ("🟠 中度流失警訊" if pred_prob >= 35 else "🟢 相對穩定留存")
-                    fig_gauge = go.Figure(go.Indicator(
-                        mode="gauge+number",
-                        value=round(pred_prob, 1),
-                        number={"suffix": "%"},
-                        title={"text": f"AI 預測這位玩家的退坑機率<br><span style='font-size:14px;color:#c7d5e0;'>{risk_label}</span>"},
-                        gauge={
-                            "axis": {"range": [0, 100]},
-                            "bar": {"color": "#ff4b4b" if pred_prob >= 65 else ("#ffa15a" if pred_prob >= 35 else "#4ecdc4")},
-                            "steps": [
-                                {"range": [0, 35], "color": "rgba(78,205,196,0.22)"},
-                                {"range": [35, 65], "color": "rgba(255,161,90,0.22)"},
-                                {"range": [65, 100], "color": "rgba(255,75,75,0.28)"}
-                            ]
-                        }
-                    ))
-                    fig_gauge.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", height=280, margin=dict(t=55, b=10))
-                    st.plotly_chart(fig_gauge, use_container_width=True)
-            else:
-                st.info("目前這組資料的流失樣本分布較極端，請切換其他遊戲或於左側「進階參數」調整門檻以啟動預測機。")
-
-        # --- TAB 4: 兩款遊戲大 PK ---
-        with tabs[3]:
-            st.markdown("""
-            <div class="explain-strip">
-                ⚔️ <strong>不同類型的遊戲，害玩家退坑的原因完全不同！</strong> 這張雷達圖把兩款遊戲的五大弱點疊在一起：外圈越尖的地方，代表那款遊戲在那方面的退坑災情越嚴重。
+                <strong>同類型競品對比：</strong> 將兩款同類型遊戲的五大弱點疊在同一張雷達圖上；越靠外圈的地方代表那方面的退坑災情越嚴重，能直接看出競爭對手的強項與弱項。
             </div>
             """, unsafe_allow_html=True)
 
@@ -1176,15 +1230,15 @@ else:
                 with p_img1:
                     h1 = get_game_header_url(selected_appid)
                     if h1:
-                        st.image(h1, caption=f"🔵 主體檢遊戲：{selected_name}", use_container_width=True)
+                        st.image(h1, caption=f"[藍線] 主體檢遊戲：{selected_name}", use_container_width=True)
                     else:
-                        st.info(f"🔵 {selected_name}")
+                        st.info(f"[藍線] {selected_name}")
                 with p_img2:
                     h2 = get_game_header_url(pk_appid)
                     if h2:
-                        st.image(h2, caption=f"🔴 對照組遊戲：{pk_name}", use_container_width=True)
+                        st.image(h2, caption=f"[紅線] 對照組競品：{pk_name}", use_container_width=True)
                     else:
-                        st.info(f"🔴 {pk_name}")
+                        st.info(f"[紅線] {pk_name}")
 
                 all_asps = list(ASPECT_KEYWORDS.keys())
                 s1_map = dict(zip(ppi_df["痛點屬性"], ppi_df["痛點衝擊指數 (PPI)"]))
@@ -1197,18 +1251,18 @@ else:
                 fig_radar.add_trace(go.Scatterpolar(r=v2 + [v2[0]], theta=all_asps + [all_asps[0]], fill="toself", name=pk_name, line_color="#ff4b4b"))
                 fig_radar.update_layout(
                     polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
-                    template="plotly_dark", title="⚔️ 五大痛點急迫度雷達圖對決（越靠外圈越嚴重）",
+                    template="plotly_dark", title="同類型競品五大痛點雷達圖對決（越靠外圈越嚴重）",
                     paper_bgcolor="rgba(0,0,0,0)", height=500
                 )
                 st.plotly_chart(fig_radar, use_container_width=True)
             else:
-                st.info("目前為單款遊戲體檢模式。請點擊上方「⬅️ 重選／更換比較遊戲」或在左側開啟「雙遊戲 PK 比較」選擇第二款遊戲即可對決！")
+                st.info("目前為單款遊戲體檢模式。請點擊上方「重選／更換比較遊戲」或在左側開啟「開啟雙遊戲 PK 比較」選擇同類型對手即可對決。")
 
-        # --- TAB 5: 給評審看：資料科學與統計驗證 ---
-        with tabs[4]:
+        # --- TAB 4: 資料科學與統計驗證 ---
+        with tabs[3]:
             st.markdown("""
             <div class="explain-strip">
-                🎓 <strong>資料科學核心方法論驗證專區</strong>：本頁完整呈現背後的統計推論（勝算比 95% CI 森林圖、卡方檢定、貝葉斯平滑）、監督式機器學習模型評估（ROC-AUC、XAI 係數）以及參數敏感度穩健性檢驗（Kendall's W）。
+                <strong>資料科學核心方法論驗證專區：</strong> 完整呈現背後的統計推論（勝算比 95% CI 森林圖、卡方檢定、貝葉斯平滑）、監督式機器學習模型評估（ROC-AUC、XAI 係數）以及參數敏感度穩健性檢驗（Kendall's W）。
             </div>
             """, unsafe_allow_html=True)
 
@@ -1232,8 +1286,8 @@ else:
                                      annotation_text="OR = 1.0 (無顯著影響線)", annotation_position="top right")
                 fig_forest.update_layout(
                     xaxis_type="log", template="plotly_dark",
-                    title="🌲 流失勝算比 (Odds Ratio) 95% CI 森林圖（對數軸）",
-                    xaxis_title="Odds Ratio (>1 代表顯著增加退坑風險)",
+                    title="流失勝算比 (Odds Ratio) 95% CI 森林圖（對數軸）",
+                    xaxis_title="Odds Ratio (>1 代表顯著增加退坑風險)", yaxis_title="",
                     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(23,26,33,0.6)", height=340
                 )
                 st.plotly_chart(fig_forest, use_container_width=True)
@@ -1242,8 +1296,9 @@ else:
                 melt_b = ppi_df.melt(id_vars="痛點屬性", value_vars=["原始負評率 (%)", "平滑負評率 (%)"], var_name="估計方法", value_name="負評率 (%)")
                 fig_bayes = px.bar(melt_b, x="痛點屬性", y="負評率 (%)", color="估計方法", barmode="group",
                                    color_discrete_map={"原始負評率 (%)": "#6c7a89", "平滑負評率 (%)": "#66c0f4"},
-                                   template="plotly_dark", title=f"📐 貝葉斯平滑校正前後對照 (先驗強度 C = {prior_c})")
-                fig_bayes.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(23,26,33,0.6)", height=340)
+                                   template="plotly_dark", title=f"貝葉斯平滑校正前後對照 (先驗強度 C = {prior_c})")
+                fig_bayes.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(23,26,33,0.6)",
+                                        xaxis_title="", height=340)
                 st.plotly_chart(fig_bayes, use_container_width=True)
 
             show_cols = ["痛點屬性", "提及次數", "負面提及數", "平滑負評率 (%)", "平滑流失轉化率 (%)", "流失勝算比 (OR)", "OR 95% 信賴區間", "卡方檢定 p-value", "負評中位數時數 (hr)", "痛點衝擊指數 (PPI)"]
@@ -1275,7 +1330,7 @@ else:
                     fig_roc.add_trace(go.Scatter(x=fpr_rf, y=tpr_rf, mode="lines", name=f"Random Forest (AUC={rf_auc:.3f})", line=dict(color="#66c0f4", width=3)))
                     fig_roc.add_trace(go.Scatter(x=fpr_lr, y=tpr_lr, mode="lines", name=f"Logistic Reg (AUC={lr_auc:.3f})", line=dict(color="#4ecdc4", width=2.5)))
                     fig_roc.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode="lines", name="隨機基準線 (0.50)", line=dict(color="#8f98a0", dash="dash")))
-                    fig_roc.update_layout(template="plotly_dark", title="📈 流失預測模型 ROC-AUC 曲線",
+                    fig_roc.update_layout(template="plotly_dark", title="流失預測模型 ROC-AUC 曲線",
                                           xaxis_title="False Positive Rate", yaxis_title="True Positive Rate",
                                           paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(23,26,33,0.6)", height=340)
                     st.plotly_chart(fig_roc, use_container_width=True)
@@ -1285,14 +1340,15 @@ else:
                     imp_df = pd.DataFrame({
                         "特徵變數": X_df.columns,
                         "標準化邏輯迴歸係數": np.round(coefs, 3),
-                        "影響方向": ["正向推升退坑風險 🔴" if c > 0 else "保護留存/降低流失 🟢" for c in coefs]
+                        "影響方向": ["正向推升退坑風險" if c > 0 else "保護留存／降低流失" for c in coefs]
                     }).sort_values("標準化邏輯迴歸係數", ascending=True)
                     fig_imp = px.bar(
                         imp_df, x="標準化邏輯迴歸係數", y="特徵變數", orientation="h",
-                        color="影響方向", color_discrete_map={"正向推升退坑風險 🔴": "#ff4b4b", "保護留存/降低流失 🟢": "#4ecdc4"},
-                        template="plotly_dark", title="🧠 模型可解釋性 (XAI)：各痛點對退坑的真實邊際影響"
+                        color="影響方向", color_discrete_map={"正向推升退坑風險": "#ff4b4b", "保護留存／降低流失": "#4ecdc4"},
+                        template="plotly_dark", title="模型可解釋性 (XAI)：各痛點對退坑的真實邊際影響"
                     )
-                    fig_imp.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(23,26,33,0.6)", height=340)
+                    fig_imp.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(23,26,33,0.6)",
+                                          yaxis_title="", height=340)
                     st.plotly_chart(fig_imp, use_container_width=True)
             else:
                 st.info("目前這組資料類別分布過於偏斜，請調整參數或更換遊戲檢視模型評估結果。")
@@ -1307,7 +1363,7 @@ else:
                     co_mat = piv_co.T.dot(piv_co)
                     fig_heat = px.imshow(
                         co_mat, text_auto=True, color_continuous_scale="Blues",
-                        template="plotly_dark", title="🔥 負面痛點共現矩陣 (Co-occurrence)"
+                        template="plotly_dark", title="負面痛點共現矩陣 (Co-occurrence)"
                     )
                     fig_heat.update_layout(paper_bgcolor="rgba(0,0,0,0)", height=340)
                     st.plotly_chart(fig_heat, use_container_width=True)
@@ -1318,7 +1374,7 @@ else:
                     fig_sens = px.line(
                         sens_df, x="門檻 ΔT (分鐘)", y="PPI 分數", color="痛點屬性", markers=True,
                         template="plotly_dark",
-                        title=f"🧪 敏感度檢定：不同 ΔT 門檻下排名穩健性 (Kendall's W = {kendall_w})"
+                        title=f"敏感度檢定：不同 ΔT 門檻下排名穩健性 (Kendall's W = {kendall_w})"
                     )
                     fig_sens.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(23,26,33,0.6)", height=340)
                     st.plotly_chart(fig_sens, use_container_width=True)
